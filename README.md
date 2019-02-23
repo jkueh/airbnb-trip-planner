@@ -5,11 +5,16 @@ tolerable.
 
 Make data-driven decisions about your trip today!
 
+... And use this script responsibly. Please.  
+You don't want to be single-handedly
+responsible for this tool disappearing, and/or bringing AirBnB down for
+everyone.
+
 ## Requirements
 
   * `go`, or `docker` installed in your path - See below for details
   * An internet connection
-  * A configured 'trip file'
+  * A configured 'trip file', e.g. `my_trip.yml`
 
 ## Usage
 
@@ -17,6 +22,8 @@ I'm not going to tell you how exactly to extract a public API key from the main
 AirBnB site, nor am I going to provide a script that does this.  
 A bit of patience and digging around in a browser debugging tool should get you
 the result you want ;)
+
+After you've got it, set it as the `API_KEY` environment variable.
 
 ... But aside from the above, this script can be run in one of two ways:
 
