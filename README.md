@@ -23,6 +23,21 @@ the result you want ;)
   1. Call `run/script` from inside the repository; or
   2. Run `go run .` (or `go run *.go` if you're on an older version of `go`.)
 
+An example trip file and output CSV file are in the repository, and should give
+you a better idea of how things are set up.
+
+### Search area coordinates
+
+The way this tool searches for properties is by a map rectangle - Which means
+that it has two sets of coordinates - One for the bottom-left corner of the
+rectangle (`sw`), and one for the upper-right (`ne`).  
+*Why it's not `nw` and `se` is beyond me, but I digress.*
+
+You can get these coordinates by going to Google Maps, clicking on a location
+(note: not a location pin, or location heading), and copying and pasting the
+values that pop up at the bottom-centre of your screen. Repeat this process for
+the other corner of the 'rectangle', and plug them into the YAML file.
+
 ### Environment Variables
 
 This is kept fairly primitive, with the idea that everything should be managed
@@ -51,7 +66,9 @@ tracking down issues such as AirBnB rate-limiting this script.
 
   * The script doesn't leverage request concurrency when fetching data, to avoid
     completely overloading the AirBnB servers, and possibly subjecting users to
-    IP-based throttling.
+    IP-based throttling.  
+    It also doesn't write each listing to the file as it processes it, mainly
+    because I didn't write the functionality for it ¯\\\_\(ツ\)_/¯.
 
   * All my commits are hidden in another repository, mainly because it runs a
     few automated tests, small data collection attempts, and accesses things on
@@ -59,12 +76,16 @@ tracking down issues such as AirBnB rate-limiting this script.
 
 ## Some Context
 
-This is the result of a few weeks worth of spare time, and a desire to get a bit
-more information out of the AirBnB website.
+This is the result of a few weeks worth of hacking away in my spare time, borne
+from a desire to get a bit more information out of the AirBnB website.
 
 There were things that I was willing to pay more for (for example, the ability
 to check myself in via a lockbox, or wireless internet). However, the AirBnB
 search experience only allows you to filter it out.
+
+My last few trips I had planned by manually copying and pasting information into
+my Google Sheet, but then I realised - *Why am I wasting time doing this when I
+can get a machine to do it for me!?*
 
 There were a few other minor things, like not being able to sort by price, and
 wanting to get certain insights into other parts of the data.

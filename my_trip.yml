@@ -1,0 +1,34 @@
+output_file: output/my_trip.csv
+
+search_base: &search_base
+  search_query: Melbourne
+  guests:
+    adults: 1
+    children: 0
+    infants: 0
+
+# amenities that we're interested in
+# case insensitive, but nice for output
+amenities:
+- Lockbox
+- Heating
+- Air Conditioning
+- Free Parking on Premises
+- Free Street Parking
+- Wireless Internet
+
+searches:
+- <<: *search_base
+  name: Melbourne City
+  dates:
+    check_in: "2019-05-01"
+    check_out: "2019-05-05"
+  sw: [ -37.821356, 144.950666 ]
+  ne: [ -37.803371, 144.974089 ]
+- <<: *search_base
+  name: South Melbourne
+  dates:
+    check_in: "2019-05-05"
+    check_out: "2019-05-10"
+  sw: [ -37.842846, 144.943591 ]
+  ne: [ -37.823174, 144.972284 ]
