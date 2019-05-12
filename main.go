@@ -2,62 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"os/signal"
 	"strconv"
-	"strings"
-	"syscall"
-
-	yaml "gopkg.in/yaml.v2"
 )
-
-var config Config
-var verbose bool
-var debug bool
-
-var gracefulStop = make(chan os.Signal, 1)
-var gracefulStopRequested = false
-
-func init() {
-
-	// Set up the SIGTERM and SIGINT notifiers
-	signal.Notify(gracefulStop, syscall.SIGTERM)
-	signal.Notify(gracefulStop, syscall.SIGINT)
-	go func() {
-		sig := <-gracefulStop
-		log.Printf("Received signal %+v - Waiting for job to finish...\n", sig)
-		gracefulStopRequested = true
-	}()
-
-	verboseString := strings.ToLower(os.Getenv("VERBOSE"))
-	debugString := strings.ToLower(os.Getenv("DEBUG"))
-
-	if debugString == "true" {
-		verbose = true
-		debug = true
-	} else if verboseString == "true" {
-		verbose = true
-	}
-
-	apiKey = os.Getenv("API_KEY")
-	if apiKey == "" {
-		log.Fatalln("API Key not specified.")
-	}
-	configFile := os.Getenv("TRIP_FILE")
-	if configFile == "" {
-		configFile = "my_trip.yml"
-		log.Println("No TRIP_FILE specified. Defaulting to:", configFile)
-	} else {
-		if debug {
-			log.Println("Using config file: " + configFile)
-		}
-	}
-	fileContents, err := ioutil.ReadFile(configFile)
-	errExit(err)
-	errExit(yaml.Unmarshal(fileContents, &config))
-}
 
 func main() {
 
@@ -112,9 +60,10 @@ func main() {
 				search.Dates.CheckOut,
 			)
 			log.Printf(
-				"Processing listing %3d of %3d: %s\n",
+				"Processing listing %3d of %3d: [%d] %s\n",
 				searchListingIndex+1,
 				len(searchListings),
+				searchResultListing.ID,
 				searchResultListing.Name,
 			)
 
@@ -125,14 +74,44 @@ func main() {
 				)
 				continue
 			}
-			if listing.PdpListingBookingDetails[0].Available == false {
+
+			if listing.PdpListingBookingDetails[0].Available != true {
 				if verbose {
 					log.Println("Not available:", searchListing.ID)
 				}
 				continue
 			}
 
-			listingBootstrapData := getListingBootstrap(searchListing.ID)
+			listingBootstrapData, err := getListingBootstrap(searchListing.ID)
+
+			if err != nil {
+				if verbose {
+					log.Println(err)
+				}
+				log.Println(
+					"Skipping listing",
+					searchListing.ID,
+					"due to missing bootstrap data.",
+				)
+				continue
+			}
+			// If the BootstrapData is blank, then it's likely that the property isn't
+			// available for those dates.
+			if listingBootstrapData.IsBlank() {
+				log.Println(
+					"Skipping listing",
+					searchListing.ID,
+					"due to missing bootstrap data.",
+				)
+				if verbose {
+					log.Println("BootstrapData was received, but was likely empty.")
+				}
+				if debug {
+					log.Fatalln(getListingPage(searchListing.ID))
+				}
+				continue
+			}
+
 			homePDP := listingBootstrapData.BootstrapData.ReduxData.HomePDP
 			listingData := homePDP.ListingInfo.Listing
 			bookingDetails := listing.PdpListingBookingDetails[0]
@@ -214,7 +193,7 @@ func main() {
 			}
 			outputData = append(outputData, listingOutput)
 			if debug && amenityCount > 0 {
-				log.Printf("\tAmentities (%d):\n", amenityCount)
+				log.Printf("\tAmenities (%d):\n", amenityCount)
 				for _, amenity := range listingData.ListingAmenities {
 					log.Println("\t- " + amenity.Name)
 				}

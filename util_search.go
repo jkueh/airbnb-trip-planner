@@ -70,7 +70,7 @@ func getSearchListings(search Search, itemsPerPage int, offset int) ExploreTabs 
 		"locale=en-AU",
 	}
 	var exploreResults ExploreTabs
-	resp := makeAPIQuery("explore_tabs", params)
+	resp := makeAPIQueryGET("explore_tabs", params)
 	errExit(json.Unmarshal(resp, &exploreResults))
 	return exploreResults
 }

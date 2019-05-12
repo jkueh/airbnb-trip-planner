@@ -16,20 +16,44 @@ import (
 func extractListingID(url string) string {
 	re := regexp.MustCompile("/rooms/([0-9]+)")
 	match := re.FindStringSubmatch(url)
-	return match[1]
+	if len(match) > 0 {
+		return match[1]
+	}
+	return ""
 }
 
 var baseURL = "https://www.airbnb.com.au/api/v2"
 var apiKey string
 
-func makeAPIQuery(url string, params []string) []byte {
+func makeAPIQueryGET(url string, params []string) []byte {
 	url = addQueryStringsToURL(baseURL+"/"+url, append(
 		append([]string{"key=" + apiKey}, params...),
 	))
 	if debug {
-		log.Println("Attempting a call to: " + url)
+		log.Println("Attempting a GET to: " + url)
 	}
-	return getResponseBody(url)
+	req := getNewGETRequest(url)
+	responseBody := getResponseBody(*req)
+	// if debug {
+	// 	log.Println("RESPONSE BODY:")
+	// fmt.Println(string(responseBody))
+	// }
+	return responseBody
+}
+func makeAPIQueryPOST(url string, params []string) []byte {
+	url = addQueryStringsToURL(baseURL+"/"+url, append(
+		append([]string{"key=" + apiKey}, params...),
+	))
+	if debug {
+		log.Println("Attempting a POST to: " + url)
+	}
+	req := getNewPOSTRequest(url)
+	responseBody := getResponseBody(*req)
+	if debug {
+		log.Println("RESPONSE BODY:")
+		fmt.Println(string(responseBody))
+	}
+	return responseBody
 }
 
 func addQueryStringsToURL(url string, params []string) string {
@@ -54,34 +78,44 @@ func getRandomUserAgent() string {
 		fmt.Sprintf(
 			"%s %s",
 			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)",
-			"Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36",
+			"Ubuntu Chromium/71.0.3578.98 Chrome/74.0.3729.131 Safari/537.36",
 		),
 		fmt.Sprintf(
 			"%s %s",
 			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-			"(KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
+			"(KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
+		),
+		fmt.Sprintf(
+			"%s %s",
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36",
+			"(KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
 		),
 	}
 	return userAgents[rand.Intn(len(userAgents))]
 }
-func getNewRequest(url string) *http.Request {
+func getNewGETRequest(url string) *http.Request {
 	req, err := http.NewRequest("GET", url, nil)
 	errExit(err)
 	req.Header.Set("X-Airbnb-API-Key", apiKey)
 	req.Header.Set("User-Agent", getRandomUserAgent())
 	return req
 }
+func getNewPOSTRequest(url string) *http.Request {
+	req, err := http.NewRequest("POST", url, nil)
+	errExit(err)
+	req.Header.Set("X-Airbnb-API-Key", apiKey)
+	req.Header.Set("User-Agent", getRandomUserAgent())
+	return req
+}
 
-func getResponseBody(url string) []byte {
+func requestUntilSuccess(req *http.Request) (*http.Response, error) {
 	retryCount := 0
 	retryLimit := 15
 	retrySleepMin := 500
 	retrySleepMax := 2500
 
 	client := &http.Client{}
-
-	rand.Seed(time.Now().Unix())
-	resp, err := client.Do(getNewRequest(url))
+	resp, err := client.Do(req)
 	for resp.StatusCode != 200 {
 		rand.Seed(time.Now().UnixNano())
 		if retryCount > retryLimit {
@@ -98,8 +132,15 @@ func getResponseBody(url string) []byte {
 			log.Println("Waiting for", sleepDur)
 		}
 		time.Sleep(sleepDur)
-		resp, err = client.Do(getNewRequest(url))
+		resp, err = client.Do(req)
 	}
+	return resp, err
+}
+
+func getResponseBody(req http.Request) []byte {
+
+	rand.Seed(time.Now().Unix())
+	resp, err := requestUntilSuccess(&req)
 
 	if resp.StatusCode != 200 {
 		errExit(errors.New("Unable to get listing information"))

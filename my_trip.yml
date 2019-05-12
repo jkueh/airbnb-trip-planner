@@ -21,8 +21,8 @@ searches:
 - <<: *search_base
   name: Melbourne City
   dates:
-    check_in: "2019-05-01"
-    check_out: "2019-05-05"
+    check_in: "2019-05-16"
+    check_out: "2019-05-17"
   sw: [ -37.821356, 144.950666 ]
   ne: [ -37.803371, 144.974089 ]
 - <<: *search_base

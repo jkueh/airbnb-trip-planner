@@ -54,7 +54,7 @@ from the YAML config file.
 AirBnB API when searching.  
 From what I can tell, this doesn't change often.
 
-`TRIP_FILE` (Optional): Handy if you've got different trips, or want to briefly
+`CONFIG_FILE` (Optional): Handy if you've got different trips, or want to briefly
 test something out. Set this to the path to your config file.
 
 `VERBOSE` / `DEBUG` (Optional): Outputs more information for debugging, and
@@ -62,28 +62,20 @@ tracking down issues such as AirBnB rate-limiting this script.
 
 ## Other Things
 
-  * Signal interrupts don't work with the docker container - That is if you use
-    `run/script`, the only way to effectively stop the process is:
-    ```
-    <CTRL+Z>
-    docker ps
-    <find the container name or ID>
-    docker rm -f <container_name_or_id>
-    ```
-
   * The script doesn't leverage request concurrency when fetching data, to avoid
     completely overloading the AirBnB servers, and possibly subjecting users to
     IP-based throttling.  
     It also doesn't write each listing to the file as it processes it, mainly
     because I didn't write the functionality for it ¯\\\_\(ツ\)_/¯.
 
-  * All my commits are hidden in another repository, mainly because it runs a
-    few automated tests, small data collection attempts, and accesses things on
-    a local network.
+  * All my historical commits are hidden in another repository, mainly because
+    it runs a few automated tests, small data collection attempts, and accesses
+    things on a local network.  
+    So this is more of a release repository than anything else.
 
 ## Some Context
 
-This is the result of a few weeks worth of hacking away in my spare time, borne
+This is the result of a few months worth of hacking away in my spare time, borne
 from a desire to get a bit more information out of the AirBnB website.
 
 There were things that I was willing to pay more for (for example, the ability
